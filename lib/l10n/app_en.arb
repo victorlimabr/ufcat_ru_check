@@ -1,0 +1,23 @@
+{
+  "connectionErrorMessage": "Oops. Check your connection or departament credentials",
+  "signInPageSubtitle": "Welcome",
+  "signInPageTitle": "Department access",
+  "departmentIdentifierLabel": "ID",
+  "departmentIdentifierHint": "Enter department ID",
+  "departmentPasswordLabel": "Password",
+  "departmentPasswordHint": "Enter department password",
+  "requiredFieldError": "It cannot be blank",
+  "enterButton": "Enter",
+  "nextButton": "Next",
+  "nthQuestion": "Question {nth}",
+  "@nthQuestion": {
+    "placeholders": {
+      "nth": {}
+    }
+  },
+  "flowPageTitle": "Tell us about your experience at Nasr Faiad Hospital",
+  "flowPageMessage": "Will be less than 1 minute.",
+  "startButton": "Start",
+  "savingAnswersPageMessage": "Thank you for participating. We will evaluate all your responses...",
+  "endFlowPageMessage": "Thanks for your feedback. We'll do our best to accommodate you."
+}

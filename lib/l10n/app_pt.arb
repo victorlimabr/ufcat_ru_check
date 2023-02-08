@@ -1,0 +1,18 @@
+{
+  "connectionErrorMessage": "Ops. Verifique a conexão com servidor ou Credenciais.",
+  "signInPageSubtitle": "Bem vindo(a)",
+  "signInPageTitle": "Acesse o departamento",
+  "departmentIdentifierLabel": "ID",
+  "departmentIdentifierHint": "Digite o ID do departamento",
+  "departmentPasswordLabel": "Senha",
+  "departmentPasswordHint": "Digite a senha do departamento",
+  "requiredFieldError": "Não pode ficar em branco",
+  "enterButton": "Entrar",
+  "nextButton": "Próxima",
+  "nthQuestion": "Pergunta {nth}",
+  "flowPageTitle": "Conte-nos a sua experiência no Hospital Nasr Faiad",
+  "flowPageMessage": "É menos de 1 minuto.",
+  "startButton": "Começar",
+  "savingAnswersPageMessage": "Obrigado por participar. Vamos avaliar todas suas respostas...",
+  "endFlowPageMessage": "Obrigado pelo seu feedback. Faremos o melhor para lhe atender."
+}
