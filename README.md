@@ -52,4 +52,9 @@
 
 * Configurar faixa de valores
 * Configurar valor dos subsídios
-* 
+
+
+
+
+
+# Estrutura da aplicacão

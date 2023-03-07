@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ufcat_ru_check/data/result.dart';
+import 'package:ufcat_ru_check/di/service_locator.dart';
 import 'package:ufcat_ru_check/domain/auth/sign_up_use_case.dart';
 import 'package:ufcat_ru_check/feature/dashboard/dashboard_page.dart';
 import 'package:ufcat_ru_check/feature/navigator.dart';
@@ -16,7 +17,7 @@ class SignUpPage extends StatefulWidget {
 
 class _SignUpPageState extends State<SignUpPage> {
   final _formkey = GlobalKey<FormState>();
-  final _signUpBloc = SignUpBLoC();
+  final _signUpBloc = ServiceLocator.get<SignUpBLoC>();
   final _nameController = TextEditingController();
   final _identifierController = TextEditingController();
   final _documentController = TextEditingController();
@@ -116,7 +117,7 @@ class _SignUpPageState extends State<SignUpPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _textField(context, _nameController, 'Nome'),
+        _textField(context, _nameController, 'Nome Completo'),
         _textField(context, _identifierController, 'Usuário Sigaa'),
         _textField(context, _documentController, 'CPF'),
         _textField(context, _emailController, 'Email'),

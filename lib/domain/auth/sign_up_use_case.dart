@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ufcat_ru_check/data/employee/employee.dart';
-import 'package:ufcat_ru_check/di/service_locator.dart';
+import 'package:ufcat_ru_check/data/employee/employee_repository.dart';
 import 'package:ufcat_ru_check/domain/auth/auth_exception.dart';
 import 'package:ufcat_ru_check/domain/use_case.dart';
 
@@ -26,8 +26,12 @@ class SignUpUseCaseOutput {
   SignUpUseCaseOutput(this.employee);
 }
 
-class SignUpUseCase extends UseCase<SignUpUseCaseInput, SignUpUseCaseOutput> {
-  final _auth = ServiceLocator.get<FirebaseAuth>();
+class SignUpUseCase
+    extends FutureUseCase<SignUpUseCaseInput, SignUpUseCaseOutput> {
+  final FirebaseAuth _auth;
+  final EmployeeDao _employeeDao;
+
+  SignUpUseCase(this._auth, this._employeeDao);
 
   @override
   Future<SignUpUseCaseOutput> perform(SignUpUseCaseInput input) async {
@@ -39,13 +43,14 @@ class SignUpUseCase extends UseCase<SignUpUseCaseInput, SignUpUseCaseOutput> {
       final user = credential.user;
       if (user == null) throw AuthException();
       final employee = Employee.build(
-        uid: user.uid,
+        id: user.uid,
         name: input.name,
         email: input.email,
         identifier: input.identifier,
         document: input.document,
       );
-      await employee.save();
+      await _employeeDao.save(employee);
+      await user.getIdToken(true);
       return SignUpUseCaseOutput(employee);
     } on FirebaseAuthException catch (e) {
       throw e.toAppException();

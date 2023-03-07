@@ -1,67 +1,113 @@
 import 'dart:typed_data';
 
-import 'package:collection/collection.dart';
-import 'package:excel/excel.dart';
+import 'package:excel/excel.dart' as excel;
 import 'package:intl/intl.dart';
 import 'package:ufcat_ru_check/data/category/category.dart';
 import 'package:ufcat_ru_check/data/level/level.dart';
 import 'package:ufcat_ru_check/data/meal/meal.dart';
+import 'package:ufcat_ru_check/data/setting/sheet_settings.dart';
 import 'package:ufcat_ru_check/data/sheet/entry/entry.dart';
-import 'package:ufcat_ru_check/data/sheet/entry/entry_dao.dart';
 import 'package:ufcat_ru_check/data/sheet/entry/entry_status.dart';
-import 'package:ufcat_ru_check/data/sheet/sheet.dart' as entity;
-import 'package:ufcat_ru_check/data/sheet/sheet_dao.dart';
+import 'package:ufcat_ru_check/data/sheet/sheet_repository.dart';
 
 class SheetParser {
-  final String employeeId;
-  final Meal meal;
-  final Level level;
-  final Category category;
-  final DateTime? at;
+  final SheetDao _sheetRepository;
 
-  const SheetParser(
-    this.employeeId,
-    this.meal,
-    this.level,
-    this.category, {
-    this.at,
-  });
+  SheetParser(this._sheetRepository);
 
-  Future<void> call(Uint8List bytes) async {
-    final excel = Excel.decodeBytes(bytes);
-    final table = excel.tables.values.first;
-    final sheet = entity.Sheet.build(
-      at: at ?? DateTime.now(),
+  Future<void> call(
+    Uint8List bytes, {
+    required String employeeId,
+    required Meal meal,
+    required Level level,
+    required Category category,
+    required SheetSettings settings,
+    DateTime? at,
+  }) async {
+    final external = excel.Excel.decodeBytes(bytes);
+    final table = external.tables.values.first;
+    final sheet = _sheetRepository.build(
+      date: at ?? DateTime.now(),
       employeeId: employeeId,
       meal: meal,
       level: level,
       category: category,
     );
-    final timeFormat = DateFormat.Hms('pt');
-    final entries = table.rows.mapIndexed((index, row) {
-      if (index < 4 || index == table.maxRows - 1) return null;
-      final time = timeFormat.parse(row[2]!.value.toString());
-      return Entry.build(
-        at: (at ?? DateTime.now()).copyWith(
-          hour: time.hour,
-          minute: time.minute,
-          second: time.second,
-        ),
-        sheetId: sheet.id,
-        studentId: row[0]!.value.toString(),
-        studentName: row[1]!.value.toString(),
-        status: row[4]!.value.toString() == 'Entrada'
-            ? EntryStatus.permitted
-            : EntryStatus.denied,
-      );
-    }).whereNotNull().toList();
-    await sheet.save();
-    await sheet.entries.addEntries(entries);
+    final entries = _sheetRepository.parseEntries(
+      table,
+      sheet.id,
+      at: at,
+      settings: settings,
+    );
+    await _sheetRepository.save(sheet);
+    await _sheetRepository.addEntries(sheet, entries);
+  }
+}
+
+extension on SheetDao {
+  Iterable<Entry> parseEntries(
+    excel.Sheet sheet,
+    String sheetId, {
+    DateTime? at,
+    required SheetSettings settings,
+  }) {
+    final rows = sheet.rows.sublist(
+      settings.firstEntryLine,
+      sheet.maxRows - settings.footerLineCount,
+    );
+    return rows
+        .map((row) => _parseEntry(
+              sheetId,
+              row,
+              at: at,
+              settings: settings,
+            ))
+        .toList();
   }
 
-  String _parseRegisterId(dynamic value) {
-    if (value is int) return value.toString();
-    if (value is SharedString) return value.toString();
-    return value as String;
+  Entry _parseEntry(
+    String sheetId,
+    List<excel.Data?> row, {
+    DateTime? at,
+    required SheetSettings settings,
+  }) {
+    print(row);
+    return buildEntry(
+      sheetId: sheetId,
+      time: _parseEntryTime(row, at: at, settings: settings),
+      studentId: _parseStudentId(row, settings),
+      studentName: _parseStudentName(row, settings),
+      status: _parseStatus(row, settings),
+    );
+  }
+
+  DateFormat get timeFormat => DateFormat.Hms('pt');
+
+  DateTime _parseEntryTime(
+    List<excel.Data?> row, {
+    DateTime? at,
+    required SheetSettings settings,
+  }) {
+    final rowTime =
+        timeFormat.parse(row[settings.timeColumn]!.value.toString());
+    final time = (at ?? DateTime.now()).copyWith(
+      hour: rowTime.hour,
+      minute: rowTime.minute,
+      second: rowTime.second,
+    );
+    return time;
+  }
+
+  String _parseStudentId(List<excel.Data?> row, SheetSettings settings) =>
+      row[settings.registerColumn]!.value.toString();
+
+  String _parseStudentName(List<excel.Data?> row, SheetSettings settings) =>
+      row[settings.nameColumn]!.value.toString();
+
+  EntryStatus _parseStatus(List<excel.Data?> row, SheetSettings settings) {
+    if (row[settings.statusColumn]!.value.toString() == 'Entrada') {
+      return EntryStatus.permitted;
+    }
+    return EntryStatus.denied;
   }
 }

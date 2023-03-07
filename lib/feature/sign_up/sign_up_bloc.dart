@@ -7,7 +7,9 @@ typedef SignUpState = Result<SignUpUseCaseOutput>;
 typedef SignUpSuccessState = ResultSuccess<SignUpUseCaseOutput>;
 
 class SignUpBLoC extends Bloc<SignUpEvent, SignUpState> {
-  SignUpBLoC() : super(ResultEmpty()) {
+  final SignUpUseCase _signUpUseCase;
+
+  SignUpBLoC(this._signUpUseCase) : super(ResultEmpty()) {
     on<SignUpSignEvent>(_handleSignEvent);
   }
 
@@ -15,7 +17,7 @@ class SignUpBLoC extends Bloc<SignUpEvent, SignUpState> {
     SignUpSignEvent event,
     Emitter<SignUpState> emit,
   ) async {
-    await emit.forEach(SignUpUseCase()(event.use), onData: (result) => result);
+    emit(await _signUpUseCase(event.use));
   }
 }
 

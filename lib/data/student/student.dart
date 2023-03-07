@@ -1,15 +1,14 @@
 import 'package:decimal/decimal.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:json_annotation/json_annotation.dart';
 import 'package:ufcat_ru_check/data/category/category.dart';
 import 'package:ufcat_ru_check/data/entity.dart';
 import 'package:ufcat_ru_check/data/level/level.dart';
-import 'package:ufcat_ru_check/db/dao.dart';
 import 'package:ufcat_ru_check/utils/firestore_utils.dart';
 
 part 'student.g.dart';
 
 @JsonSerializable()
-class Student extends Entity<Student> with Dao<Student> {
+class Student extends Entity<Student> {
   final String name;
   final String document;
   final bool regular;

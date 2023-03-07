@@ -109,17 +109,37 @@ extension ContextExtensions on BuildContext {
     Object? arguments,
     String? name,
   }) {
+    return Navigator.of(this).navigateFade(
+      to: to,
+      replace: replace,
+      root: root,
+      replacePredicate: replacePredicate,
+      arguments: arguments,
+      name: name,
+    );
+  }
+}
+
+extension NavigatorHelper on NavigatorState {
+  Future<T?> navigateFade<T, TO>({
+    required Widget to,
+    bool replace = false,
+    bool root = false,
+    RoutePredicate? replacePredicate,
+    Object? arguments,
+    String? name,
+  }) {
     if (replace) {
-      return Navigator.of(this).pushReplacement<T, dynamic>(
+      return pushReplacement<T, dynamic>(
         RUCheckNavigator.getRouteFade(to: to, name: name),
       );
     } else if (root) {
-      return Navigator.of(this).pushAndRemoveUntil(
+      return pushAndRemoveUntil(
         RUCheckNavigator.getRouteFade(to: to, name: name),
         (_) => false,
       );
     } else if (replacePredicate != null) {
-      return Navigator.of(this).pushAndRemoveUntil(
+      return pushAndRemoveUntil(
         RUCheckNavigator.getRouteSlide(
           to: to,
           arguments: arguments,
@@ -128,10 +148,7 @@ extension ContextExtensions on BuildContext {
         replacePredicate,
       );
     }
-    return Navigator.of(this).push<T>(RUCheckNavigator.getRouteFade(
-      to: to,
-      name: name,
-    ));
+    return push<T>(RUCheckNavigator.getRouteFade(to: to, name: name));
   }
 }
 

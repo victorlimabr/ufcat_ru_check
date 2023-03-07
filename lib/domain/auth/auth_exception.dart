@@ -1,54 +1,38 @@
+import 'package:collection/collection.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'auth_exception.g.dart';
 
 class AuthException implements Exception {
+  final AuthExceptionError error;
 
+  AuthException({this.error = AuthExceptionError.other});
 }
 
-class InvalidEmailException implements AuthException {
-
+class UnauthorizedException extends AuthException {
+  UnauthorizedException({super.error});
 }
 
-class UserDisabledException implements AuthException {
+@JsonEnum(alwaysCreate: true, fieldRename: FieldRename.kebab)
+enum AuthExceptionError {
+  invalidEmail,
+  userDisabled,
+  userNotFound,
+  wrongPassword,
+  emailAlreadyInUse,
+  weakPassword,
+  other;
 
-}
-
-class UserNotFoundException implements AuthException {
-
-}
-
-class WrongPasswordException implements AuthException {
-
-}
-
-class EmailAlreadyInUseException implements AuthException {
-
-}
-
-class WeakPasswordException implements AuthException {
-
-}
-
-class UnauthorizedException implements AuthException {
-
+  static AuthExceptionError fromString(String code) =>
+      _$AuthExceptionErrorEnumMap.entries
+          .firstWhereOrNull((e) => e.value == code)
+          ?.key ??
+      other;
 }
 
 extension FirebaseException on FirebaseAuthException {
   AuthException toAppException() {
-    switch (code) {
-      case 'invalid-email':
-        return InvalidEmailException();
-      case 'user-disabled':
-        return UserDisabledException();
-      case 'user-not-found':
-        return UserNotFoundException();
-      case 'wrong-password':
-        return WrongPasswordException();
-      case 'email-already-in-use':
-        return EmailAlreadyInUseException();
-      case 'weak-password':
-        return EmailAlreadyInUseException();
-      default:
-        return AuthException();
-    }
+    return AuthException(error: AuthExceptionError.fromString(code));
   }
 }
