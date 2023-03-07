@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:ufcat_ru_check/data/result.dart';
-import 'package:ufcat_ru_check/domain/auth/sign_in_use_case.dart';
-import 'package:ufcat_ru_check/feature/dashboard/dashboard_page.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:formz/formz.dart';
+import 'package:ufcat_ru_check/di/service_locator.dart';
 import 'package:ufcat_ru_check/feature/navigator.dart';
+import 'package:ufcat_ru_check/feature/sign_in/bloc/sign_in_event.dart';
+import 'package:ufcat_ru_check/feature/sign_in/bloc/sign_in_state.dart';
 import 'package:ufcat_ru_check/feature/sign_in/sign_in_bloc.dart';
 import 'package:ufcat_ru_check/feature/sign_up/sign_up_page.dart';
 import 'package:ufcat_ru_check/ui/components/error_snackbar.dart';
@@ -17,22 +19,8 @@ class SignInPage extends StatefulWidget {
 
 class _SignInPageState extends State<SignInPage> {
   final _formkey = GlobalKey<FormState>();
-  final _signInBloc = SignInBLoC();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-
-  @override
-  void initState() {
-    _signInBloc.add(AuthCheckEvent());
-    _signInBloc.stream.listen((result) {
-      if (result is SignInSuccessState) {
-        context.navigateFade(to: const DashboardPage());
-      } else if (result is ResultError<SignInUseCaseOutput>) {
-        context.showErrorSnackBar(result.exception.toString());
-      }
-    });
-    super.initState();
-  }
 
   @override
   void dispose() {
@@ -43,77 +31,89 @@ class _SignInPageState extends State<SignInPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: FractionallySizedBox(
-          widthFactor: 1 / 2,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.all(Radius.circular(16)),
-                  color: context.cardColor,
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 48),
-                child: SizedBox(
-                  width: 464,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 16, bottom: 48),
-                        child: Text(
-                          'UFCat - RU Check',
-                          style: context.displayLarge,
-                        ),
+    return BlocProvider(
+      create: (_) => ServiceLocator.get<SignInBLoC>(),
+      child: BlocListener<SignInBLoC, SignInState>(
+        listener: (context, state) {
+          if (state.status == FormzStatus.submissionFailure) {
+            context.showErrorSnackBar('FAIL');
+          }
+        },
+        child: Builder(
+          builder: (context) => Scaffold(
+            body: Center(
+              child: FractionallySizedBox(
+                widthFactor: 1 / 2,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.all(Radius.circular(16)),
+                        color: context.cardColor,
                       ),
-                      Form(
-                        key: _formkey,
+                      padding: const EdgeInsets.symmetric(vertical: 48),
+                      child: SizedBox(
+                        width: 464,
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Padding(
-                              padding: const EdgeInsets.all(32),
-                              child: _formFields(context),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 32,
-                                horizontal: 16,
+                              padding: const EdgeInsets.only(top: 16, bottom: 48),
+                              child: Text(
+                                'UFCat - RU Check',
+                                style: context.displayLarge,
                               ),
-                              child: Row(
+                            ),
+                            Form(
+                              key: _formkey,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  Expanded(child: _signUpButton(context)),
-                                  Expanded(child: _enterButton(context)),
+                                  Padding(
+                                    padding: const EdgeInsets.all(32),
+                                    child: _formFields(context, context.read()),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 32,
+                                      horizontal: 16,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Expanded(child: _signUpButton(context)),
+                                        Expanded(child: _enterButton(context)),
+                                      ],
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Column _formFields(BuildContext context) {
+  Column _formFields(BuildContext context, SignInBLoC bloc) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _textField(context, _emailController, 'E-mail'),
-        _textField(context, _passwordController, 'Senha', obscure: true),
+        _textField(context, (email) => bloc.add(SignInEmailChanged(email ?? '')), 'E-mail'),
+        _textField(context, (password) => bloc.add(SignInPasswordChanged(password ?? '')), 'Senha', obscure: true),
       ],
     );
   }
@@ -144,22 +144,20 @@ class _SignInPageState extends State<SignInPage> {
 
   void _signIn(BuildContext context) {
     if (_formkey.currentState!.validate()) {
-      _signInBloc.add(
-        SignInSignEvent(_emailController.text, _passwordController.text),
-      );
+      context.read<SignInBLoC>().add(const SignInSubmitted());
     }
   }
 
   Widget _textField(
     BuildContext context,
-    TextEditingController controller,
+    ValueChanged<String?> onChanged,
     String label, {
     bool obscure = false,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: TextFormField(
-        controller: controller,
+        onChanged: onChanged,
         keyboardType: TextInputType.number,
         obscureText: obscure,
         validator: (email) {

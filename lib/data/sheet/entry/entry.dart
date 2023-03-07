@@ -1,19 +1,17 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:ufcat_ru_check/data/entity.dart';
-import 'package:ufcat_ru_check/data/sheet/entry/entry_dao.dart';
 import 'package:ufcat_ru_check/data/sheet/entry/entry_status.dart';
-import 'package:ufcat_ru_check/db/auto_id_generator.dart';
-import 'package:ufcat_ru_check/db/dao.dart';
 import 'package:ufcat_ru_check/utils/firestore_utils.dart';
 
 part 'entry.g.dart';
 
 @JsonSerializable()
-class Entry extends Entity<Entry> with Dao<Entry> {
+class Entry extends Entity<Entry> {
   final String sheetId;
   final String studentId;
   final String studentName;
+  @TimestampConverter()
+  final DateTime time;
   final EntryStatus status;
 
   const Entry({
@@ -23,22 +21,25 @@ class Entry extends Entity<Entry> with Dao<Entry> {
     required this.sheetId,
     required this.studentId,
     required this.studentName,
+    required this.time,
     required this.status,
   });
 
   factory Entry.build({
-    DateTime? at,
+    required String id,
     required String sheetId,
     required String studentId,
     required String studentName,
+    required DateTime time,
     required EntryStatus status,
   }) {
-    final now = at ?? DateTime.now();
+    final now = DateTime.now();
     return Entry(
-      id: AutoIdGenerator.autoId(),
+      id: id,
       sheetId: sheetId,
       studentId: studentId,
       studentName: studentName,
+      time: time,
       status: status,
       createdAt: now,
       updatedAt: now,
@@ -56,8 +57,9 @@ class Entry extends Entity<Entry> with Dao<Entry> {
       updatedAt: updatedAt ?? this.updatedAt,
       sheetId: sheetId,
       studentId: studentId,
-      status: status,
       studentName: studentName,
+      time: time,
+      status: status,
     );
   }
 
@@ -66,12 +68,11 @@ class Entry extends Entity<Entry> with Dao<Entry> {
         ...super.props,
         sheetId,
         studentId,
-        status,
         studentName,
+        time,
+        status,
       ];
 
-  @override
-  CollectionReference<Entry> get collection => sheetRef.entries;
 }
 
 extension EntryFromJson on Map<String, dynamic> {

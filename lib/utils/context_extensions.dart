@@ -14,15 +14,23 @@ extension TextSylesContext on BuildContext {
 
   TextStyle? get titleMedium => theme.textTheme.titleMedium;
 
+  TextStyle? get titleSmall => theme.textTheme.titleSmall;
+
   TextStyle? get bodyLarge => theme.textTheme.bodyLarge;
 
   TextStyle? get bodyMedium => theme.textTheme.bodyMedium;
 
   TextStyle? get labelLarge => theme.textTheme.labelLarge;
+
+  TextStyle? get labelMedium => theme.textTheme.labelMedium;
 }
 
 extension ColorsContext on BuildContext {
   Color? get cardColor => theme.cardTheme.color ?? theme.cardColor;
 
   Color get scaffoldColor => theme.scaffoldBackgroundColor;
+
+  Color? get errorColor => theme.colorScheme.error;
+
+  Color? get onErrorColor => theme.colorScheme.error;
 }

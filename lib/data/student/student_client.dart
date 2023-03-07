@@ -1,6 +1,6 @@
 import 'package:ufcat_ru_check/data/result.dart';
 import 'package:ufcat_ru_check/data/student/student.dart';
-import 'package:ufcat_ru_check/infra/apis/sigaa_client.dart';
+import 'package:ufcat_ru_check/infra/remote/apis/sigaa_client.dart';
 
 class StudentClient extends SigaaClient {
   StudentClient(

@@ -1,233 +1,182 @@
-import 'package:async/async.dart' as async;
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:ufcat_ru_check/data/employee/employee.dart';
-import 'package:ufcat_ru_check/data/result.dart';
-import 'package:ufcat_ru_check/data/sheet/entry/entry.dart';
-import 'package:ufcat_ru_check/data/sheet/entry/entry_dao.dart';
-import 'package:ufcat_ru_check/data/sheet/sheet.dart';
-import 'package:ufcat_ru_check/data/sheet/sheet_dao.dart';
 import 'package:ufcat_ru_check/di/service_locator.dart';
-import 'package:ufcat_ru_check/domain/auth/sign_out_use_case.dart';
+import 'package:ufcat_ru_check/feature/authentication/authenticated_page.dart';
+import 'package:ufcat_ru_check/feature/authentication/authentication_bloc.dart';
+import 'package:ufcat_ru_check/feature/dashboard/daily/daily_entries_content.dart';
+import 'package:ufcat_ru_check/feature/dashboard/employee/employee_content.dart';
+import 'package:ufcat_ru_check/feature/dashboard/entries_filter/entries_filter_bloc.dart';
+import 'package:ufcat_ru_check/feature/dashboard/entries_filter/entries_filter_panel.dart';
+import 'package:ufcat_ru_check/feature/dashboard/report/entries_report_bloc.dart';
+import 'package:ufcat_ru_check/feature/dashboard/report/entries_report_content.dart';
+import 'package:ufcat_ru_check/feature/dashboard/settings/app_settings_bloc.dart';
+import 'package:ufcat_ru_check/feature/dashboard/settings/app_settings_content.dart';
 import 'package:ufcat_ru_check/feature/dashboard/sheet_picker_dialog.dart';
-import 'package:ufcat_ru_check/ui/components/authenticated_page.dart';
+import 'package:ufcat_ru_check/feature/dashboard/students/students_content.dart';
+import 'package:ufcat_ru_check/services/report_exporter.dart';
 import 'package:ufcat_ru_check/ui/components/dashboard_page_builder.dart';
-import 'package:ufcat_ru_check/utils/context_extensions.dart';
 
 class DashboardPage extends AuthenticatedPage {
   const DashboardPage({Key? key}) : super(key: key);
 
   @override
   Widget authBuild(BuildContext context, Employee employee) {
-    return DashboardPageBuilder(
-      userName: employee.name,
-      pageSections: [
-        DashboardPageSectionData(
-          title: 'Entradas',
-          menus: [
-            const NavigationDrawerDestination(
-              icon: Icon(MdiIcons.notebook),
-              label: Text('Diário'),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => ServiceLocator.get<AppSettingsBloc>()..loadSettings(),
+        ),
+        BlocProvider(create: (_) => ServiceLocator.get<EntriesFilterBloc>()),
+        BlocProvider(create: (context) {
+          final filterState = context.read<EntriesFilterBloc>().state;
+          final settingsState = context.read<AppSettingsBloc>().state;
+          return ServiceLocator.get<EntriesReportBLoC>()
+            ..applyFilter(
+              filterState,
+              settingsState.settings,
+            );
+        }),
+      ],
+      child: Builder(builder: (context) {
+        return DashboardPageBuilder(
+          userName: employee.name,
+          pageSections: [
+            DashboardPageSectionData(
+              title: 'Entradas',
+              menus: [
+                _navigationMenu(MdiIcons.notebook, 'Diário'),
+                _navigationMenu(MdiIcons.chartBox, 'Relatórios'),
+              ],
+              pages: [
+                _dailyEntriesPage(context, employee),
+                _reportPage(context, employee),
+              ],
             ),
-            const NavigationDrawerDestination(
-              icon: Icon(MdiIcons.chartBox),
-              label: Text('Relatórios'),
-            )
-          ],
-          pages: [
-            DashboardPageData(
-              title: 'Diário de Entradas',
-              action: DashboardActionData(
-                MdiIcons.plus,
-                'Adicionar planilha',
-                () => SheetPickerDialog.show(context, employeeId: employee.id),
-              ),
-              contentBuilder: (context) => StreamBuilder<Result<List<Sheet>>>(
-                stream:
-                    ServiceLocator.get<CollectionReference<Sheet>>().observe,
-                builder: (context, snapshot) {
-                  final result = snapshot.data;
-                  if (result is ResultSuccess<List<Sheet>>) {
-                    if (result.data.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 16),
-                              child: Text('Nenhuma planilha foi encontrada'),
-                            ),
-                            FilledButton.icon(
-                              onPressed: () => SheetPickerDialog.show(context,
-                                  employeeId: employee.id),
-                              style: const ButtonStyle(),
-                              icon: Icon(MdiIcons.plus),
-                              label: Text('Adicionar planilha'),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                    return _buildSheet(result.data);
-                  }
-                  return Container();
-                },
-              ),
-              sideBuilder: (context) => ListView(
-                children: [
-                  Text('Filtros', style: context.titleMedium),
-                  _filterDivider(),
-                  const TextField(
-                    decoration: InputDecoration(
-                      label: Text('Data'),
-                      hintText: '01/01/2023',
-                      border: OutlineInputBorder(),
-                    ),
+            DashboardPageSectionData(
+              title: 'Cadastros',
+              menus: [
+                _navigationMenu(MdiIcons.accountMultiple, 'Funcionário'),
+                _navigationMenu(MdiIcons.accountSchool, 'Estudantes'),
+              ],
+              pages: [
+                _employeesPage(context, employee),
+                _studentsPage(context)
+              ],
+            ),
+            DashboardPageSectionData(
+              title: 'Outros',
+              menus: [
+                _navigationMenu(MdiIcons.cog, 'Configurações'),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                  child: ListTile(
+                    horizontalTitleGap: 0,
+                    leading: const Icon(MdiIcons.logout),
+                    title: const Text('Sair'),
+                    onTap: () => _signOut(context),
                   ),
-                  _filterDivider(),
-                  _filterTitleSection(context, 'Nível do curso'),
-                  _filterCheckbox(context, 'Graduação'),
-                  _filterCheckbox(context, 'Pós graduação'),
-                  _filterCheckbox(context, 'Mestrado'),
-                  _filterDivider(),
-                  _filterTitleSection(context, 'Categoria do subsídio'),
-                  _filterCheckbox(context, 'Bolsa integral'),
-                  _filterCheckbox(context, 'Subsidiado - R\$ 4,00'),
-                  _filterCheckbox(context, 'Subsidiado - R\$ 6,40'),
-                  _filterCheckbox(context, 'Não subsidiado'),
-                  _filterDivider(),
-                  _filterTitleSection(context, 'Refeição'),
-                  _filterCheckbox(context, 'Almoço'),
-                  _filterCheckbox(context, 'Janta'),
-                ],
-              ),
-            ),
-            DashboardPageData(
-              title: 'Relatório de Entradas',
-              contentBuilder: (context) => Container(),
+                )
+              ],
+              pages: [_settingsPage(context)],
             )
           ],
-        ),
-        DashboardPageSectionData(
-          title: 'Cadastros',
-          menus: [
-            const NavigationDrawerDestination(
-              icon: Icon(MdiIcons.accountMultiple),
-              label: Text('Funcionários'),
-            ),
-            const NavigationDrawerDestination(
-              icon: Icon(MdiIcons.accountSchool),
-              label: Text('Estudantes'),
-            )
-          ],
-          pages: [
-            DashboardPageData(
-              title: 'Cadastro de Funcionários',
-              contentBuilder: (context) => Container(),
-            ),
-            DashboardPageData(
-              title: 'Cadastro de Estudantes',
-              contentBuilder: (context) => Container(),
-            ),
-          ],
-        ),
-        DashboardPageSectionData(
-          title: 'Outros',
-          menus: [
-            const NavigationDrawerDestination(
-              icon: Icon(MdiIcons.cog),
-              label: Text('Configurações'),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0),
-              child: ListTile(
-                horizontalTitleGap: 0,
-                leading: Icon(MdiIcons.logout),
-                title: Text('Sair'),
-                onTap: () => SignOutUseCase().call(null),
-              ),
-            )
-          ],
-          pages: [
-            DashboardPageData(
-              title: 'Configurações',
-              contentBuilder: (context) => Container(),
-            )
-          ],
-        )
-      ],
-    );
-  }
-
-  Padding _filterDivider() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 24),
-      child: Divider(),
-    );
-  }
-
-  Text _filterTitleSection(BuildContext context, String title) {
-    return Text(
-      title,
-      style: context.bodyMedium,
-    );
-  }
-
-  Widget _filterCheckbox(BuildContext context, String label) {
-    return Row(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8),
-          child: Checkbox(
-            value: true,
-            onChanged: (value) {},
-          ),
-        ),
-        Expanded(
-          child: Text(
-            label,
-            style: context.bodyLarge,
-          ),
-        )
-      ],
-    );
-  }
-
-  Widget _buildSheet(List<Sheet> sheets) {
-    if (sheets.isEmpty) {
-      return Container();
-    }
-    return StreamBuilder(
-      stream: async.StreamZip(sheets.map((e) => e.entries.observe)),
-      builder: (context, snap) {
-        final result = snap.data;
-        final success = result?.whereType<ResultSuccess<List<Entry>>>();
-        return SingleChildScrollView(
-          child: DataTable(
-            columns: const [
-              DataColumn(label: Text('Matrícula')),
-              DataColumn(label: Text('Horário')),
-              DataColumn(label: Text('Nome')),
-              DataColumn(label: Text('Refeição')),
-              DataColumn(label: Text('Nível')),
-              DataColumn(label: Text('Categoria')),
-            ],
-            rows: (success ?? []).expand((r) => (r as ResultSuccess<List<Entry>>).data).map((entry) {
-              final sheet = sheets.firstWhere((s) => s.id == entry.sheetId);
-              return DataRow(cells: [
-                DataCell(Text(entry.studentId)),
-                DataCell(Text(DateFormat.Hms().format(entry.createdAt))),
-                DataCell(Text(entry.studentName)),
-                DataCell(Text(sheet.meal.label)),
-                DataCell(Text(sheet.level.label)),
-                DataCell(Text(sheet.category.label)),
-              ]);
-            }).toList(),
-          ),
         );
-      },
+      }),
+    );
+  }
+
+  Future<void> _signOut(BuildContext context) {
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Atenção'),
+        content: const Text('Deseja realmente sair?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => context
+                .read<AuthenticationBloc>()
+                .add(EmployeeLogoutRequested()),
+            child: const Text('Confirmar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  NavigationDrawerDestination _navigationMenu(IconData icon, String label) {
+    return NavigationDrawerDestination(
+      icon: Icon(icon),
+      label: Text(label),
+    );
+  }
+
+  DashboardPageData _employeesPage(BuildContext context, Employee employee) {
+    return DashboardPageData(
+      title: 'Cadastro do Funcionário',
+      contentBuilder: (context) => EmployeeContent(employee: employee),
+    );
+  }
+
+  DashboardPageData _studentsPage(BuildContext context) {
+    return DashboardPageData(
+      title: 'Cadastro de Estudantes',
+      action: DashboardActionData(
+        Icons.save,
+        'Atualizar dados do SIGAA',
+        () => context.read<AppSettingsBloc>().saveSettings(),
+      ),
+      contentBuilder: (context) => const StudentsContent(),
+    );
+  }
+
+  DashboardPageData _settingsPage(BuildContext context) {
+    return DashboardPageData(
+      title: 'Configurações',
+      action: DashboardActionData(
+        Icons.save,
+        'Salvar configurações',
+        () => context.read<AppSettingsBloc>().saveSettings(),
+      ),
+      contentBuilder: (_) => const AppSettingsContent(),
+    );
+  }
+
+  DashboardPageData _dailyEntriesPage(BuildContext context, Employee employee) {
+    return DashboardPageData(
+      title: 'Diário de Entradas',
+      action: DashboardActionData(
+        MdiIcons.plus,
+        'Adicionar planilha',
+        () => SheetPickerDialog.show(
+          context,
+          employeeId: employee.id,
+          settings: context.read<AppSettingsBloc>().state.settings,
+        ),
+      ),
+      contentBuilder: (context) => DailyEntriesContent(employeeId: employee.id),
+      sideBuilder: (context) => const EntriesFilterPanel(),
+    );
+  }
+
+  DashboardPageData _reportPage(BuildContext context, Employee employee) {
+    return DashboardPageData(
+      title: 'Relatório de Entradas',
+      action: DashboardActionData(
+        MdiIcons.plus,
+        'Exportar relatório',
+        () => ReportExporter()(
+          context.read<EntriesFilterBloc>().state,
+          context.read<EntriesReportBLoC>().state,
+        ).save(),
+      ),
+      contentBuilder: (_) => EntriesReportContent(employeeId: employee.id),
+      sideBuilder: (context) => const EntriesFilterPanel(),
     );
   }
 }

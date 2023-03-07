@@ -5,14 +5,21 @@ import 'package:intl/intl.dart';
 import 'package:ufcat_ru_check/data/category/category.dart';
 import 'package:ufcat_ru_check/data/level/level.dart';
 import 'package:ufcat_ru_check/data/meal/meal.dart';
+import 'package:ufcat_ru_check/data/setting/app_settings.dart';
+import 'package:ufcat_ru_check/di/service_locator.dart';
 import 'package:ufcat_ru_check/services/sheet_parser.dart';
+import 'package:ufcat_ru_check/ui/extensions/category_extensions.dart';
+import 'package:ufcat_ru_check/ui/extensions/level_extensions.dart';
+import 'package:ufcat_ru_check/ui/extensions/meal_extensions.dart';
 
 class SheetPickerDialog extends StatefulWidget {
   final String employeeId;
+  final AppSettings settings;
 
   const SheetPickerDialog({
     Key? key,
     required this.employeeId,
+    required this.settings,
   }) : super(key: key);
 
   @override
@@ -21,10 +28,14 @@ class SheetPickerDialog extends StatefulWidget {
   static Future<void> show(
     BuildContext context, {
     required String employeeId,
+    required AppSettings settings,
   }) {
     return showDialog(
       context: context,
-      builder: (context) => SheetPickerDialog(employeeId: employeeId),
+      builder: (context) => SheetPickerDialog(
+        employeeId: employeeId,
+        settings: settings,
+      ),
     );
   }
 }
@@ -37,6 +48,7 @@ class _SheetPickerDialogState extends State<SheetPickerDialog> {
   PlatformFile? _selectedFile;
   final TextEditingController _fileController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
+  final parser = ServiceLocator.get<SheetParser>();
 
   @override
   void initState() {
@@ -57,16 +69,20 @@ class _SheetPickerDialogState extends State<SheetPickerDialog> {
         ),
         TextButton(
           onPressed: () async {
-            final parser = SheetParser(
-              widget.employeeId,
-              _selectedMeal,
-              _selectedLevel,
-              _selectedCategory,
-            );
             final file = _selectedFile;
             if (file != null) {
-              await parser(file.bytes!);
-              Navigator.of(context).pop();
+              await parser(
+                file.bytes!,
+                employeeId: widget.employeeId,
+                meal: _selectedMeal,
+                level: _selectedLevel,
+                category: _selectedCategory,
+                settings: widget.settings.sheetSettings,
+                at: _selectedDate,
+              );
+              if (context.mounted) {
+                Navigator.of(context).pop();
+              }
             }
           },
           child: const Text('Confirmar'),
@@ -81,7 +97,7 @@ class _SheetPickerDialogState extends State<SheetPickerDialog> {
             child: Text('Selecione uma planilha do excel'),
           ),
           Padding(
-            padding: EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.only(bottom: 12),
             child: TextField(
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
@@ -158,7 +174,8 @@ class _SheetPickerDialogState extends State<SheetPickerDialog> {
                           (category) => RadioListTile<Category>(
                             value: category,
                             groupValue: _selectedCategory,
-                            title: Text(category.label),
+                            title: Text(category
+                                .label(widget.settings.subsidySettings)),
                             onChanged: (category) =>
                                 setState(() => _selectedCategory = category!),
                           ),
@@ -194,47 +211,8 @@ class _SheetPickerDialogState extends State<SheetPickerDialog> {
     );
 
     if (pickedDate != null) {
-      _selectedDate = pickedDate;
+      setState(() => _selectedDate = pickedDate);
       _dateController.text = _dateFormat.format(pickedDate);
-    }
-  }
-}
-
-extension MealLabel on Meal {
-  String get label {
-    switch (this) {
-      case Meal.lunch:
-        return 'Almoço';
-      case Meal.dinner:
-        return 'Jantar';
-    }
-  }
-}
-
-extension LevelLabel on Level {
-  String get label {
-    switch (this) {
-      case Level.undergraduate:
-        return 'Graduação';
-      case Level.latoSensu:
-        return 'Pós-graduação';
-      case Level.strictoSensu:
-        return 'Mestrado';
-    }
-  }
-}
-
-extension CategoryLabel on Category {
-  String get label {
-    switch (this) {
-      case Category.free:
-        return 'Bolsista integral';
-      case Category.highSubsidized:
-        return 'Subsidiado - R\$ 4,00';
-      case Category.lowSubsidized:
-        return 'Subsidiado - R\$ 6,40';
-      case Category.full:
-        return 'Não subsidiado';
     }
   }
 }

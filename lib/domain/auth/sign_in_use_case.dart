@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ufcat_ru_check/data/employee/employee.dart';
-import 'package:ufcat_ru_check/data/employee/employee_dao.dart';
-import 'package:ufcat_ru_check/di/service_locator.dart';
+import 'package:ufcat_ru_check/data/employee/employee_repository.dart';
 import 'package:ufcat_ru_check/domain/auth/auth_exception.dart';
 import 'package:ufcat_ru_check/domain/use_case.dart';
 
@@ -18,8 +17,12 @@ class SignInUseCaseOutput {
   SignInUseCaseOutput(this.employee);
 }
 
-class SignInUseCase extends UseCase<SignInUseCaseInput, SignInUseCaseOutput> {
-  final _auth = ServiceLocator.get<FirebaseAuth>();
+class SignInUseCase
+    extends FutureUseCase<SignInUseCaseInput, SignInUseCaseOutput> {
+  final FirebaseAuth _auth;
+  final EmployeeDao _employeeDao;
+
+  SignInUseCase(this._auth, this._employeeDao);
 
   @override
   Future<SignInUseCaseOutput> perform(SignInUseCaseInput input) async {
@@ -30,7 +33,7 @@ class SignInUseCase extends UseCase<SignInUseCaseInput, SignInUseCaseOutput> {
       );
       final user = credential.user;
       if (user == null) throw AuthException();
-      final employee = await EmployeeEntity.find(user.uid);
+      final employee = await _employeeDao.find(user.uid);
       if (employee == null) throw UnauthorizedException();
       return SignInUseCaseOutput(employee);
     } on FirebaseAuthException catch (e) {

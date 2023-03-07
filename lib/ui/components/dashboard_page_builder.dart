@@ -110,18 +110,12 @@ class _DashboardPageBuilderState extends State<DashboardPageBuilder> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Expanded(
-                            child: Card(
-                              elevation: 0,
-                              margin: const EdgeInsets.all(12),
-                              child: Padding(
-                                padding: const EdgeInsets.all(24),
-                                child:
-                                    _pages[pageIndex].contentBuilder(context),
-                              ),
-                            ),
+                            child: _pages[pageIndex].contentBuilder(context),
                           ),
                           _dashboardSide(
-                              context, _pages[pageIndex].sideBuilder),
+                            context,
+                            _pages[pageIndex].sideBuilder,
+                          ),
                         ].whereNotNull().toList(),
                       ),
                     ),

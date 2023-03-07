@@ -5,11 +5,11 @@ part 'level.g.dart';
 @JsonEnum(alwaysCreate: true)
 enum Level {
   @JsonValue(0)
-  undergraduate,
+  undergraduate, // Graduação
   @JsonValue(1)
-  latoSensu,
+  latoSensu, // Pós -Graduação
   @JsonValue(2)
-  strictoSensu;
+  strictoSensu; // Mestrado
 
   static Level fromInt(int value) => $enumDecode(_$LevelEnumMap, value);
 

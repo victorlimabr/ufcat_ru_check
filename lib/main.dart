@@ -1,52 +1,55 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:ufcat_ru_check/di/service_locator.dart';
+import 'package:ufcat_ru_check/feature/authentication/authentication_bloc.dart';
 import 'package:ufcat_ru_check/feature/dashboard/dashboard_page.dart';
+import 'package:ufcat_ru_check/feature/navigator.dart';
 import 'package:ufcat_ru_check/feature/sign_in/sign_in_page.dart';
-import 'package:ufcat_ru_check/firebase_options.dart';
+import 'package:ufcat_ru_check/ui/design_system.dart';
 
 void main() async {
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
   await ServiceLocator.initialize();
-  runApp(const MyApp());
+  runApp(
+    BlocProvider(
+      create: (_) => ServiceLocator.get<AuthenticationBloc>(),
+      child: const UfcatRuCheckApp(),
+    ),
+  );
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class UfcatRuCheckApp extends StatefulWidget {
+  const UfcatRuCheckApp({super.key});
+
+  @override
+  State<UfcatRuCheckApp> createState() => _UfcatRuCheckAppState();
+}
+
+class _UfcatRuCheckAppState extends State<UfcatRuCheckApp> {
+  final _navigatorKey = GlobalKey<NavigatorState>();
+
+  NavigatorState get _navigator => _navigatorKey.currentState!;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      localizationsDelegates: const [
-        ...AppLocalizations.localizationsDelegates,
-      ],
-      theme: ThemeData(
-        useMaterial3: true,
-        scaffoldBackgroundColor: Colors.deepPurple.shade100,
-        cardTheme: CardTheme(
-          color: Colors.deepPurple.shade50,
-        ),
-        navigationDrawerTheme: NavigationDrawerThemeData(
-          indicatorColor: Colors.deepPurple.shade100,
-        ),
-        drawerTheme: DrawerThemeData(
-          backgroundColor: Colors.deepPurple.shade50,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(16)),
-          ),
-
-        ),
-        dividerTheme: const DividerThemeData(
-          indent: 12,
-          endIndent: 12,
-        ),
-
-      ),
+      navigatorKey: _navigatorKey,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      theme: DesignSystem.theme,
       supportedLocales: const [Locale('en', ''), Locale('pt', '')],
       initialRoute: '/sign_in',
+      builder: (context, child) =>
+          BlocListener<AuthenticationBloc, AuthenticationState>(
+        listener: (context, state) {
+          final employee = state.employee;
+          if (employee == null) {
+            _navigator.navigateFade(to: const SignInPage(), root: true);
+          } else {
+            _navigator.navigateFade(to: const DashboardPage(), root: true);
+          }
+        },
+        child: child,
+      ),
       routes: {
         '/sign_in': (_) => const SignInPage(),
         '/dashboard': (_) => const DashboardPage(),

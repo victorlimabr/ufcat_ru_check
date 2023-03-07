@@ -1,17 +1,18 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:json_annotation/json_annotation.dart';
 import 'package:ufcat_ru_check/data/category/category.dart';
 import 'package:ufcat_ru_check/data/entity.dart';
 import 'package:ufcat_ru_check/data/level/level.dart';
 import 'package:ufcat_ru_check/data/meal/meal.dart';
-import 'package:ufcat_ru_check/db/auto_id_generator.dart';
-import 'package:ufcat_ru_check/db/dao.dart';
+import 'package:ufcat_ru_check/utils/date_extensions.dart';
 import 'package:ufcat_ru_check/utils/firestore_utils.dart';
 
 part 'sheet.g.dart';
 
 @JsonSerializable()
-class Sheet extends Entity<Sheet> with Dao<Sheet> {
+@TimestampConverter()
+class Sheet extends Entity<Sheet> {
   final String employeeId;
+  final DateTime date;
   final Meal meal;
   final Level level;
   final Category category;
@@ -21,23 +22,26 @@ class Sheet extends Entity<Sheet> with Dao<Sheet> {
     required super.createdAt,
     required super.updatedAt,
     required this.employeeId,
+    required this.date,
     required this.meal,
     required this.level,
     required this.category,
   });
 
   factory Sheet.build({
-    DateTime? at,
+    required String id,
     required String employeeId,
+    required DateTime date,
     required Meal meal,
     required Level level,
     required Category category,
   }) {
-    final now = at ?? DateTime.now();
+    final now = DateTime.now();
     return Sheet(
-      id: AutoIdGenerator.autoId(),
+      id: id,
       createdAt: now,
       updatedAt: now,
+      date: date.beginningOfDay,
       employeeId: employeeId,
       meal: meal,
       level: level,
@@ -52,8 +56,9 @@ class Sheet extends Entity<Sheet> with Dao<Sheet> {
   Sheet copyWith({DateTime? createdAt, DateTime? updatedAt}) {
     return Sheet(
       id: id,
+      date: date,
       createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
       employeeId: employeeId,
       meal: meal,
       level: level,
@@ -64,6 +69,7 @@ class Sheet extends Entity<Sheet> with Dao<Sheet> {
   @override
   List<Object?> get props => [
         ...super.props,
+        date,
         employeeId,
         meal,
         level,
