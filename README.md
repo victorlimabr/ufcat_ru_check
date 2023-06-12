@@ -1,17 +1,43 @@
 # Sistema de Verificação de Subsídio de Estudantes no Restaurante Universitário da Universidade Federal de Catalão
 
+1. Para utilizar o sistema, o funcionário deve acessar o sistema na tela inicial utilizando suas credenciais 
+   previamente cadastradas.
 ![TelaDelogin](https://github.com/victorlimabr/ufcat_ru_check/assets/106392990/789c3567-8914-4e1f-9a7f-35bce35ae186)
 
-![DiarioDeEntradas](https://github.com/victorlimabr/ufcat_ru_check/assets/106392990/3626d988-a747-41d0-9c87-40f876ee41c7)
+2. Na página de primeiro acesso o funcionário irá realizar o cadastro no sistema inserindo seus dados nos campos.
+![PrimeiroAcesso](https://github.com/victorlimabr/ufcat_ru_check/assets/106392990/0bf03956-2abc-4a29-a068-b619ce60aae6)
 
+3. Tela principal do sistema, onde é possível visualizar os registros de utilização do RU por parte dos alunos, 
+   esses dados são extraídos das planilhas fornecidas pelo sistema de acesso ao RU que são importadas
+   no sistema por meio da opção Adicionar Planilha.
+![DiarioDeEntradas](https://github.com/victorlimabr/ufcat_ru_check/assets/106392990/3626d988-a747-41d0-9c87-40f876ee41c7)
+   
+4. A função de adicionar planilha permite ao funcionário inserir um arquivo no sistema por meio do campo Arquivo. 
+   O arquivo deve estar no formato XLSX (Planilha do Excel). As informações obtidas serão inseridas no banco de dados
+   próprio do sistema.
 ![NovaPlanilha](https://github.com/victorlimabr/ufcat_ru_check/assets/106392990/5ef00afd-727e-40c6-9071-d775b0260852)
 
+5. O sistema é capaz de gerar relatórios utilizando um  período determinado, seja por dia, semana, mês, etc. 
+   Também é possível gerar relatório de utilização de um aluno específico, relatando os dias nos quais este  acessou o RU.
+   As planilhas já inseridas no sistema são  consultadas considerando os filtros referentes às faixas e requisitos do subsídio, 
+   Também é possível visualizar  o valor total das refeições servidas no período especificado e que deve ser repassado para 
+   a empresa responsável pelas refeições.
 ![RelatorioDeEntradas](https://github.com/victorlimabr/ufcat_ru_check/assets/106392990/062834fe-72e1-4252-aead-96073279ccd2)
 
+6. Para possibilitar a melhor forma de visualização dos dados dos estudantes cadastrados, a tela de Cadastro dos Estudantes 
+   além de exibir os dados de cada estudante em uma lista, também destaca o estudante que está com o cadastro sem atualização 
+   por mais de 6 meses.
 ![CadastroDeEstudantes](https://github.com/victorlimabr/ufcat_ru_check/assets/106392990/5b265158-38b1-44cb-b186-09972faba76d)
 
+7. Visando manter atualizado os dados dos funcionários cadastrados, a tela de Cadastro dos Funcionários possibilita a 
+   edição e exclusão desses dados, sendo possível alterar o Nome, Email, Usuário e CPF, além de ser possível alterar
+   a senha de acesso ao sistema.
 ![CadastroFuncionario](https://github.com/victorlimabr/ufcat_ru_check/assets/106392990/b69a55da-44b3-49c4-8ab4-970b5683717f)
 
+8. Como um fator de confiabilidade e para que o sistema esteja de acordo com os dados recebidos a longo prazo, os funcionários
+   devem ser capazes de modificar as faixas de subsídio existentes para o caso de serem feitas alterações nos requisitos dos 
+   benefícios fornecidos, essa manutenção é realizada a partir da tela de Configurações e devem ocorrer de acordo com as 
+   configurações de planilhas, subsídios, faixa de renda e relatório.
 ![Configuracoes](https://github.com/victorlimabr/ufcat_ru_check/assets/106392990/8c1b2b61-ef58-4a0d-9415-f57550ab9833)
 
 
