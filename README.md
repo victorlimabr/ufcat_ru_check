@@ -22,11 +22,7 @@ Sistema de Verificação de Subsídio de Estudantes no Restaurante Universitári
 1. Login PRPE
    1. email
    2. senha
-      
-      ![TelaDelogin](https://github.com/victorlimabr/ufcat_ru_check/assets/106392990/4f6cb20c-04e7-44ec-923a-14cbb3b2c578)
 2. Inserir planilha diária
-   
-      ![NovaPlanilha](https://github.com/victorlimabr/ufcat_ru_check/assets/106392990/e348dec8-5503-4d2c-93b9-c5c7cbb698ff)
    1. Comparar renda, vinculo, categoria
 3. Integração SIGAA (estudantes e funcionários)
 4. Gerar relatórios
