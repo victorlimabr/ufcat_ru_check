@@ -1,11 +1,37 @@
+Sistema de Verificação de Subsídio de Estudantes no Restaurante Universitário
+
+![TelaDelogin](https://github.com/victorlimabr/ufcat_ru_check/assets/106392990/789c3567-8914-4e1f-9a7f-35bce35ae186)
+
+![RelatorioDeEntradas](https://github.com/victorlimabr/ufcat_ru_check/assets/106392990/062834fe-72e1-4252-aead-96073279ccd2)
+
+![NovaPlanilha](https://github.com/victorlimabr/ufcat_ru_check/assets/106392990/5ef00afd-727e-40c6-9071-d775b0260852)
+
+![DiarioDeEntradas](https://github.com/victorlimabr/ufcat_ru_check/assets/106392990/3626d988-a747-41d0-9c87-40f876ee41c7)
+
+![CadastroDeEstudantes](https://github.com/victorlimabr/ufcat_ru_check/assets/106392990/5b265158-38b1-44cb-b186-09972faba76d)
+
+![CadastroFuncionario](https://github.com/victorlimabr/ufcat_ru_check/assets/106392990/b69a55da-44b3-49c4-8ab4-970b5683717f)
+
+![Configuracoes](https://github.com/victorlimabr/ufcat_ru_check/assets/106392990/8c1b2b61-ef58-4a0d-9415-f57550ab9833)
+
+
+
+
+
 # Requisitos
 1. Login PRPE
    1. email
    2. senha
+      
+      ![TelaDelogin](https://github.com/victorlimabr/ufcat_ru_check/assets/106392990/4f6cb20c-04e7-44ec-923a-14cbb3b2c578)
 2. Inserir planilha diária
+   
+      ![NovaPlanilha](https://github.com/victorlimabr/ufcat_ru_check/assets/106392990/e348dec8-5503-4d2c-93b9-c5c7cbb698ff)
    1. Comparar renda, vinculo, categoria
 3. Integração SIGAA (estudantes e funcionários)
 4. Gerar relatórios
+   
+
    1. Diário, semanal, mensal
    2. Por aluno, por período
    3. Conferir valor pago de acordo com faixa de subsidio (sigaa)
@@ -45,7 +71,7 @@
 * Valor total subsidiado
 
 
-## Confiugrações
+## Configurações
 
 * Definir colunas das entradas
 * Definir linha inicial da planilha
@@ -58,3 +84,17 @@
 
 
 # Estrutura da aplicacão
+
+
+
+
+
+
+
+
+
+
+
+
+
+
