@@ -1,12 +1,12 @@
-Sistema de Verificação de Subsídio de Estudantes no Restaurante Universitário
+# Sistema de Verificação de Subsídio de Estudantes no Restaurante Universitário da Universidade Federal de Catalão
 
 ![TelaDelogin](https://github.com/victorlimabr/ufcat_ru_check/assets/106392990/789c3567-8914-4e1f-9a7f-35bce35ae186)
 
-![RelatorioDeEntradas](https://github.com/victorlimabr/ufcat_ru_check/assets/106392990/062834fe-72e1-4252-aead-96073279ccd2)
+![DiarioDeEntradas](https://github.com/victorlimabr/ufcat_ru_check/assets/106392990/3626d988-a747-41d0-9c87-40f876ee41c7)
 
 ![NovaPlanilha](https://github.com/victorlimabr/ufcat_ru_check/assets/106392990/5ef00afd-727e-40c6-9071-d775b0260852)
 
-![DiarioDeEntradas](https://github.com/victorlimabr/ufcat_ru_check/assets/106392990/3626d988-a747-41d0-9c87-40f876ee41c7)
+![RelatorioDeEntradas](https://github.com/victorlimabr/ufcat_ru_check/assets/106392990/062834fe-72e1-4252-aead-96073279ccd2)
 
 ![CadastroDeEstudantes](https://github.com/victorlimabr/ufcat_ru_check/assets/106392990/5b265158-38b1-44cb-b186-09972faba76d)
 
